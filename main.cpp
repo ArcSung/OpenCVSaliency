@@ -75,11 +75,6 @@ void Contoures_Map(const Mat Src)
   	    }
     }
 
-    // Group all bounding rects into one, good for superimposition elimination
-    // Vector<Rect> allRect = boundRect;
-    // groupRectangles(boundRect, 0, INFINITY);
-    // cout << boundRect.size() << endl;
-
     // Group bounding rects into one
     float xmin, xmax, ymin, ymax;
     xmax = 0;
@@ -108,29 +103,12 @@ void Contoures_Map(const Mat Src)
         ymax = 0;
     }
     Rect bigRect = Rect(xmin, ymin, xmax-xmin, ymax-ymin);
-//#ifdef DEBUG
     // Draw polygonal contour + bonding rects + circles
     Mat drawing = Mat::zeros( Src.size(), CV_8UC1 );
     for (size_t i=0, max=boundRect.size(); i<max; ++i) {
-  	    //Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
   	    Scalar color = Scalar(255);
-        //drawContours( drawing, contours_poly, i, color, 2, 8, vector<Vec4i>(), 0, Point() );
         drawContours( drawing, contours_poly, i, color, 2, 8, hierarchy);
-        //rectangle( drawing, boundRect[i].tl(), boundRect[i].br(), Scalar(0,200,0), 2, 8, 0 );
-        //circle( drawing, center[i], (int)radius[i], Scalar(0,200,0), 2, 8, 0 );
-        // Center point
-        //circle( drawing, center[i], 3, Scalar(0,200,0), 2, 0, 0);
-        // Contour points
-        //for (size_t j=0, max = contours_poly[i].size(); j<max; ++j) {
-    	//    circle( drawing, contours_poly[i][j], 3, Scalar(200,0,0), 2, 0, 0);
-        //}
-        // Convex hull points
-        //drawContours(drawing, hull, i, color, 2, 8, hierarchy);
     }
-    // Draw the big rectangle
-    //rectangle( drawing, bigRect.tl(), bigRect.br(), Scalar(255,200,255), 2, 8, 0 );
-
-//    #endif
 
     imshow("contours", drawing);
 }    
@@ -141,30 +119,15 @@ int main(int argc, char* argv[])
 	Mat img = imread(argv[1]);
     if(img.empty())
         return 0;
-    //resize(img, img, Size(600, 400));
     Mat dst = Mat::zeros(img.size(), CV_8UC1);
-    //Mat gradient = Gradient_Map(img);
     imshow("src", img);
 	PreGraph SpMat;
 	Mat superpixels = SpMat.GeneSp(img);
 	Mat sal = SpMat.GeneSal(img);
-	cout << sal;
 	Mat salMap = SpMat.Sal2Img(superpixels, sal);
 	Mat tmpsuperpixels;
 	normalize(salMap, tmpsuperpixels, 255.0, 0.0, NORM_MINMAX);
 	tmpsuperpixels.convertTo(dst, CV_8U, 1.0);
-	//gradient.convertTo(gradient, CV_8UC3, 1.0);
-    //imshow("gradient", gradient);
-    //printf("tmp.channels: %d\n", tmpsuperpixels.channels());
-    //printf("gradient.channels: %d\n", gradient.channels());
-    //waitKey(0);
-    //multiply(tmpsuperpixels, gradient, dst, 0.04 , -1);
-	//imshow("Saliency",  tmpsuperpixels);
-	//imshow("tmp", dst);
-    //Mat contoursImg = Contoures_Map(dst);
-    //addWeighted(tmpsuperpixels, 0.8, gradient, 0.2, 0, dst);
-    //imshow("dst result", dst);
-    //imshow("dst contours", contoursImg);
     Mat blur, most_salient;
     bilateralFilter(dst, blur, 12, 24, 6);
     
@@ -182,14 +145,7 @@ int main(int argc, char* argv[])
     imshow("most_salient", most_salient);
 	// Eliminate small regions (Mat() == default 3x3 kernel)
 	Mat filtered;
-    //filtered = most_salient;
     // Another option is to use dilate/erode/dilate:
-	// dilate(most_salient, filtered, Mat(), Point(-1, -1), 2, 1, 1);
-	// erode(filtered, filtered, Mat(), Point(-1, -1), 4, 1, 1);
-	// dilate(filtered, filtered, Mat(), Point(-1, -1), 2, 1, 1);
-	// sprintf(file_path, "%s_filtered.png", original_image_path);
-	// imwrite(file_path, filtered);
-
 	int morph_operator = 1; // 0: opening, 1: closing, 2: gradient, 3: top hat, 4: black hat
 	int morph_elem = 2; // 0: rect, 1: cross, 2: ellipse
 	int morph_size = 10; // 2*n + 1
